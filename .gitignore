@@ -1,3 +1,11 @@
+# IntelliJ IDEA files
+out/
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+
 # Compiled class file
 *.class
 
