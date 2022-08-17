@@ -4,7 +4,6 @@ import com.converterapp.model.JsonDto;
 import com.converterapp.model.XmlDto;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +61,6 @@ public class Converter {
             List<String> tagTokens = new ArrayList<>(List.of(value.split(",")));
             for (String line : tagTokens) {
                 String[] entry = line.split(":");
-                System.out.println(Arrays.toString(entry));
                 String key = entry[0].trim();
                 key = key.substring(1, key.length() - 1);
                 String valueEntry = entry[1].trim();
