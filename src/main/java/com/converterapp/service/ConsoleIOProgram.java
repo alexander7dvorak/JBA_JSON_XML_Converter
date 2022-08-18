@@ -1,5 +1,6 @@
 package com.converterapp.service;
 
+import com.converterapp.util.Converter;
 import com.converterapp.util.FileValidator;
 import org.springframework.stereotype.Service;
 
@@ -7,7 +8,7 @@ import javax.annotation.PostConstruct;
 import java.util.Scanner;
 
 @Service
-public class ConsoleInputProgram {
+public class ConsoleIOProgram {
     private static final Scanner scanner = new Scanner(System.in);
 
     @PostConstruct

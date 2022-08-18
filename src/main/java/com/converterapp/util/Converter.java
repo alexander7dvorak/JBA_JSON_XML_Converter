@@ -1,9 +1,10 @@
-package com.converterapp.service;
+package com.converterapp.util;
 
 import com.converterapp.model.JsonDto;
 import com.converterapp.model.XmlDto;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,8 +13,24 @@ import java.util.regex.Pattern;
 
 public class Converter {
     public static String xmlToJSON(String xmlString) {
-        String betweenTagsString = extractStringBetweenTagsXML(xmlString);
-        List<String> tagTokens = new ArrayList<>(List.of(betweenTagsString.split(" ")));
+        XmlDto xmlObject = createXmlDtoFromFileContent(xmlString);
+        return new JsonDto(xmlObject).toString();
+    }
+
+    public static XmlDto createXmlDtoFromFileContent(String fileContent) {
+        Pattern patternContent = Pattern.compile("((.*>(.*)<.*?)|(>(.*)))$", Pattern.DOTALL);
+        Matcher matcherContent = patternContent.matcher(fileContent);
+        String content = "";
+        if (matcherContent.find()) {
+            content = matcherContent.group(3) == null ? matcherContent.group(5) : matcherContent.group(3);
+            int indexQ = fileContent.lastIndexOf('<');
+            int indexW = fileContent.indexOf('<');
+            fileContent = fileContent.substring(0, indexQ == indexW ? fileContent.length() : indexQ);
+        }
+
+
+        String betweenTagsString = extractStringBetweenTagsXML(fileContent);
+        List<String> tagTokens = new ArrayList<>(List.of(Arrays.stream(betweenTagsString.split("((=)|(\")| )")).filter(s -> !s.isEmpty()).toArray(String[]::new)));
         while (tagTokens.contains("=")) {
             tagTokens.remove("=");
         }
@@ -23,27 +40,26 @@ public class Converter {
         for (int i = 1; i < tagTokens.size(); i += 2) {
             tagAttributes.put(tagTokens.get(i), tagTokens.get(i + 1));
         }
-        xmlString = xmlString.substring(xmlString.indexOf('>') + 1);
+        fileContent = fileContent.substring(fileContent.indexOf('>') + 1);
+
         List<XmlDto> children = new ArrayList<>();
-        String content = extractContentXML(xmlString);
-
-        XmlDto xmlObject = new XmlDto(tagName, tagAttributes, children, content);
-        return new JsonDto(xmlObject).toString();
+        Pattern patternChild = Pattern.compile("(?:(?:(?:<(\\w+)\\s[^>/]*>.*?<(\\/?)\\1)|(?:<(\\w+)>.*?<(\\/?)\\3))\\/?>)|(<\\/.*?>)|(<[^>]*?\\/>)", Pattern.DOTALL);
+        Matcher matcherChild = patternChild.matcher(fileContent);
+        while (matcherChild.find()) {
+            children.add(createXmlDtoFromFileContent(matcherChild.group()));
+        }
+        return new XmlDto(tagName, tagAttributes, children, content);
     }
-
 
     private static String extractStringBetweenTagsXML(String xml) {
         return xml.substring(
                 xml.indexOf('<') + 1,
-                Math.min(xml.indexOf('/'), xml.indexOf('>'))
+                Math.min(xml.indexOf('/') == -1 ? Integer.MAX_VALUE : xml.indexOf('/'), xml.indexOf('>'))
         );
     }
 
-    private static String extractContentXML(String xml) {
-        return xml == null || xml.length() == 0 ? null : xml.substring(0, xml.indexOf('<'));
-    }
-
     public static String jsonToXML(String jsonString) {
+        jsonString = jsonString.replaceAll("\n", "");
         jsonString = jsonString.substring(jsonString.indexOf('{') + 1, jsonString.lastIndexOf('}'));
         Pattern pattern = Pattern.compile("\"(.*?)\"");
         Matcher matcher = pattern.matcher(jsonString);
@@ -52,6 +68,7 @@ public class Converter {
             tagName = matcher.group(1);
         }
         jsonString = jsonString.substring(matcher.end() + 1);
+
         matcher = pattern.matcher(jsonString);
         Matcher matcherChildren = Pattern.compile("\\{(.*?)}").matcher(jsonString);
         String value = "";

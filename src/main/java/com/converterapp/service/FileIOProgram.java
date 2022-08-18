@@ -1,12 +1,12 @@
 package com.converterapp.service;
 
-import com.converterapp.util.ConsoleDialog;
+import com.converterapp.util.Converter;
 import com.converterapp.util.FileValidator;
 
 import java.io.IOException;
 import java.nio.file.Files;
 
-public class FileInputProgram {
+public class FileIOProgram {
     //    @PostConstruct
     public static void run() throws IOException {
         String content = Files.readString(ConsoleDialog.getInstance().userPromptFilePath());

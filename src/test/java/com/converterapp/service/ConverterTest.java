@@ -1,5 +1,6 @@
 package com.converterapp.service;
 
+import com.converterapp.util.Converter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;

@@ -55,7 +55,7 @@ public class JsonDto {
             outputSB.append("\":{");
             int counter = 0;
             for (Map.Entry<String, String> entry : attributes.entrySet()) {
-                outputSB.append("\"@%s\":%s".formatted(entry.getKey(), entry.getValue()));
+                outputSB.append("\"@%s\":\"%s\"".formatted(entry.getKey(), entry.getValue()));
                 counter++;
                 if (counter != attributes.size() + 1) {
                     outputSB.append(",");

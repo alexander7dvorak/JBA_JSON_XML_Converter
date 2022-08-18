@@ -73,4 +73,36 @@ public class XmlDto {
         }
         return outputSB.toString();
     }
+
+    public String getHierarchy() {
+        StringBuilder outputSB = new StringBuilder();
+        appendElementString(outputSB, this, this.getTagName());
+        return outputSB.toString();
+    }
+
+    private void appendElementString(StringBuilder sb, XmlDto xml, String path) {
+        sb.append("Element:\n");
+        sb.append("path = %s\n".formatted(path));
+        sb.append("value = %s\n".formatted(
+                        xml.getContent() == null || xml.getContent().trim().length() == 0 ?
+                                null :
+                                "\"%s\"".formatted(xml.getContent())
+                )
+        );
+        if (xml.getAttributes().size() > 0) {
+            sb.append("attributes:\n");
+            for (Map.Entry<String, String> attributeEntry : xml.getAttributes().entrySet()) {
+                sb.append("%s = %s\n".formatted(attributeEntry.getKey(),
+                                attributeEntry.getValue() == null ?
+                                        null :
+                                        "\"%s\"".formatted(attributeEntry.getValue())
+                        )
+                );
+            }
+        }
+        List<XmlDto> children = xml.getChildren();
+        for (XmlDto child : children) {
+            appendElementString(sb, child, path + ", " + child.getTagName());
+        }
+    }
 }

@@ -1,4 +1,6 @@
-package com.converterapp.util;
+package com.converterapp.service;
+
+import com.converterapp.util.FileValidator;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -18,17 +20,17 @@ public class ConsoleDialog implements Dialog {
 
     @Override
     public Path userPromptFilePath() {
-        printFilePropmt();
+        printFilePrompt();
         String filePath = scanner.nextLine();
         while (!FileValidator.filePathExists(filePath)) {
-            printFilePropmt();
+            printFilePrompt();
             printFilePathDoesntExist(filePath);
             filePath = scanner.nextLine();
         }
         return new File(filePath).toPath();
     }
 
-    private void printFilePropmt() {
+    private void printFilePrompt() {
         System.out.print("Enter input file path: ");
     }
 
