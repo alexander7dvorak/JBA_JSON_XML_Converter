@@ -8,7 +8,7 @@ public class FileValidator {
     }
 
     public static boolean isJSON(String s) {
-        return s.startsWith("{");
+        return s.startsWith("{") || s.startsWith("[");
     }
 
     public static boolean filePathExists(String s) {
