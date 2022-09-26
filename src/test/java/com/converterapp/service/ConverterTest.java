@@ -15,35 +15,55 @@ class ConverterTest {
         @Test
         void XML_to_JSON_Test_1() {
             String xmlString = "<host>127.0.0.1</host>";
-            String expectedJsonResultString = "{\"host\":\"127.0.0.1\"}";
+            String expectedJsonResultString = "\\s*" +
+                    "\\{\\s*" +
+                    "\"host\"\\s*:\\s*\"127.0.0.1\"\\s*" +
+                    "}\\s*";
             assertExpectedJsonEqualsResultOfConversionFromXmlToJson(expectedJsonResultString, xmlString);
         }
 
         @Test
         void XML_to_JSON_Test_2() {
             String xmlString = "<success / >";
-            String expectedJsonResultString = "{\"success\":null}";
+            String expectedJsonResultString = "\\s*" +
+                    "\\{\\s*" +
+                    "\"success\"\\s*:\\s*null\\s*" +
+                    "}\\s*";
             assertExpectedJsonEqualsResultOfConversionFromXmlToJson(expectedJsonResultString, xmlString);
         }
 
         @Test
         void XML_to_JSON_Test_3() {
             String xmlString = "<employee department = \"manager\">Garry Smith</employee>";
-            String expectedJsonResultString = "{\"employee\":{\"@department\":\"manager\",\"#employee\":\"Garry Smith\"}}";
+            String expectedJsonResultString = "\\s*" +
+                    "\\{\\s*" +
+                    "\"employee\"\\s*:\\s*" +
+                    "\\{\\s*" +
+                    "\"@department\"\\s*:\\s*\"manager\"\\s*," +
+                    "\\s*\"#employee\"\\s*:\\s*\"Garry Smith\"\\s*" +
+                    "}\\s*" +
+                    "}\\s*";
             assertExpectedJsonEqualsResultOfConversionFromXmlToJson(expectedJsonResultString, xmlString);
         }
 
         @Test
         void XML_to_JSON_Test_4() {
             String xmlString = "<person rate = \"1\" name = \"Torvalds\"/>";
-            String expectedJsonResultString = "{\"person\":{\"@rate\":\"1\",\"@name\":\"Torvalds\",\"#person\":null}}";
+            String expectedJsonResultString = "\\s*" +
+                    "\\{\\s*" +
+                    "\"person\"\\s*:\\s*" +
+                    "\\{\\s*\"" +
+                    "@rate\"\\s*:\\s*\"1\"\\s*,\\s*" +
+                    "\"@name\"\\s*:\\s*\"Torvalds\"\\s*,\\s*\"" +
+                    "#person\"\\s*:\\s*null\\s*" +
+                    "}\\s*" +
+                    "}\\s*";
             assertExpectedJsonEqualsResultOfConversionFromXmlToJson(expectedJsonResultString, xmlString);
         }
 
         private void assertExpectedJsonEqualsResultOfConversionFromXmlToJson(String expectedJsonResultString, String xmlString) {
-            Assertions.assertEquals(
-                    expectedJsonResultString,
-                    Converter.xmlToJSON(xmlString)
+            Assertions.assertTrue(
+                    Converter.xmlToJSON(xmlString).matches(expectedJsonResultString)
             );
         }
     }
