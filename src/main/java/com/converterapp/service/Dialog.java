@@ -4,4 +4,5 @@ import java.nio.file.Path;
 
 public interface Dialog {
     Path userPromptFilePath();
+    String userPromptLine();
 }

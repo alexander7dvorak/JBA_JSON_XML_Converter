@@ -1,4 +1,4 @@
-package com.converterapp.service;
+package com.converterapp.mytests;
 
 import com.converterapp.util.Converter;
 import org.junit.jupiter.api.Assertions;

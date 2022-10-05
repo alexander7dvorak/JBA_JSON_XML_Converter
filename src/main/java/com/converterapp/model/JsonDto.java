@@ -1,9 +1,9 @@
 package com.converterapp.model;
 
 import com.converterapp.util.Converter;
+import com.converterapp.util.StringUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,24 +83,13 @@ public class JsonDto extends HierarchyElement {
         this.isArray = isArray;
         this.children = new ArrayList<>();
         if (isArray) {
-            if (fileContent != null) {
+            if (fileContent != null && !fileContent.isBlank()) {
                 this.children.addAll(createArrayChildrenList(fileContent));
             }
         }
     }
 
-    public JsonDto(List<JsonDto> children, final boolean isArray) {
-        super(null, new HashMap<>(), "");
-        this.isArray = isArray;
-        this.onlyContent = true;
-        this.root = false;
-        this.children = children;
-    }
-
     private List<JsonDto> createArrayChildrenList(String fileContent) {
-/*        if (fileContent.matches("\\s*")) {
-            return "";
-        }*/
         String content;
         List<JsonDto> output = new ArrayList<>();
         int indexOfComma;
@@ -118,7 +107,7 @@ public class JsonDto extends HierarchyElement {
                 output.add(new JsonDto(null, fileContent.trim(), false, true, false));
                 break;
             } else if (currentIndex == indexOfOpeningOfArray) {
-                content = Converter.getStringBetweenBraces(fileContent, currentIndex, '[', ']');
+                content = StringUtil.getStringBetweenBraces(fileContent, currentIndex, '[', ']');
                 fileContent = fileContent.replaceFirst("\\[" + content.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + ']', "");
                 if (content.matches("\\s*")) {
                     output.add(new JsonDto(null, null, false, true, true));
@@ -126,7 +115,7 @@ public class JsonDto extends HierarchyElement {
                     output.add(new JsonDto(null, content, false, false, true));
                 }
             } else if (currentIndex == indexOfOpeningBrace) {
-                String childrenContent = Converter.getStringBetweenBraces(fileContent, currentIndex, '{', '}');
+                String childrenContent = StringUtil.getStringBetweenBraces(fileContent, currentIndex, '{', '}');
                 if (childrenContent.matches("\\s*")) {
                     output.add(new JsonDto(null, new HashMap<>(), null, "", true, false));
                 } else {
@@ -157,7 +146,6 @@ public class JsonDto extends HierarchyElement {
                                     childrenToBeRemoved.add(child);
                                 }
                                 if (childTagName.equals("@") || child.getChildren().size() > 0) {
-                                    //feoiafjoeajfiae
                                     wrong = true;
                                 }
                             } else {
@@ -186,7 +174,7 @@ public class JsonDto extends HierarchyElement {
                                     childTagName = childTagName.substring(1);
                                     child.setTagName(childTagName);
                                 } else {
-                                    tagAttributes.put(childTagName.substring(1), (String) child.getContent());
+                                    tagAttributes.put(childTagName.substring(1), (String) (child.getContent().equals("null") ? "" : child.getContent()));
                                 }
                             }
                             if (!childTagName.startsWith("#") && !childTagName.startsWith("@")) {
@@ -203,7 +191,7 @@ public class JsonDto extends HierarchyElement {
                 output.add(new JsonDto(null, fileContent.substring(0, fileContent.indexOf(',')).trim(), false, true, false));
                 fileContent = fileContent.substring(indexOfComma);
             } else if (currentIndex == indexOfOpeningQuote) {
-                String tagName = Converter.getTagName(fileContent);
+                String tagName = StringUtil.getTagName(fileContent);
                 fileContent = fileContent.replaceFirst('"' + tagName + '"', "");
                 output.add(new JsonDto(null, tagName, false, true, false));
             }
@@ -305,7 +293,6 @@ public class JsonDto extends HierarchyElement {
                 }
                 counter = 0;
                 outputSB.append(",\n\"#%s\":".formatted(getTagName()));
-                //super.getTagName(), getContent() == null ? null : '"' + getContent().toString() + '"'));
             } else if (getTagName() != null && !getTagName().equals("element")) {
                 outputSB.append("\"");
                 outputSB.append(getTagName());
@@ -443,7 +430,7 @@ public class JsonDto extends HierarchyElement {
         }
         for (JsonDto child : children) {
             if (child.getTagName().length() != 0) {
-                sb.append(appendElementString(child, path + ", " + child.getTagName()) + "\n");
+                sb.append(appendElementString(child, path + ", " + child.getTagName())).append("\n");
             }
         }
         return sb.toString();

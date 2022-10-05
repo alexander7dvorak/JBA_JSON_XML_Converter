@@ -10,14 +10,6 @@ public class XmlDto extends HierarchyElement {
     private final boolean isArray;
     private boolean isElement;
 
-    public boolean isArray() {
-        return this.isArray;
-    }
-
-    public boolean isElement() {
-        return this.isElement;
-    }
-
     public XmlDto(String tagName, List<XmlDto> arrayElements, final boolean isElement, final boolean isArray) {
         super(isElement ? null : tagName, new HashMap<>(), null);
         this.isArray = isArray;
@@ -36,9 +28,23 @@ public class XmlDto extends HierarchyElement {
 
     public XmlDto(JsonDto json) {
         super(json.isElement() ? "element" : json.getTagName(), json.getAttributes(), json.getContent());
-        this.children = toXmlDtoList(json.getChildren());
-        this.isArray = json.isArray();
-        this.isElement = json.isElement();
+        if (json.getChildren() != null) {
+            this.children = toXmlDtoList(json.getChildren());
+            this.isArray = json.isArray();
+            this.isElement = json.isElement();
+        } else {
+            this.children = new ArrayList<>();
+            this.isArray = false;
+            this.isElement = false;
+        }
+    }
+
+    public boolean isArray() {
+        return this.isArray;
+    }
+
+    public boolean isElement() {
+        return this.isElement;
     }
 
     private List<XmlDto> toXmlDtoList(List<JsonDto> jsonDtoList) {
@@ -53,10 +59,6 @@ public class XmlDto extends HierarchyElement {
 
     public List<XmlDto> getChildren() {
         return children;
-    }
-
-    public void setChildren(List<XmlDto> children) {
-        this.children = children;
     }
 
     @Override
@@ -76,11 +78,7 @@ public class XmlDto extends HierarchyElement {
                 outputSB.append(super.getTagName());
                 outputSB.append(">");
             }
-        }/*else if (isElement) {
-            outputSB.append("<element>");
-
-            outputSB.append("</element>");
-        }  */ else {
+        } else {
             outputSB.append("<");
             outputSB.append(super.getTagName());
             if (super.getAttributes().size() > 0) {

@@ -23,11 +23,15 @@ public class ConsoleDialog implements Dialog {
         printFilePrompt();
         String filePath = scanner.nextLine();
         while (!FileValidator.filePathExists(filePath)) {
-            printFilePrompt();
             printFilePathDoesntExist(filePath);
+            printFilePrompt();
             filePath = scanner.nextLine();
         }
         return new File(filePath).toPath();
+    }
+
+    public String userPromptLine() {
+        return scanner.nextLine();
     }
 
     private void printFilePrompt() {
