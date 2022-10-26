@@ -1,4 +1,4 @@
-package com.converterapp.util;
+package com.converterapp.service;
 
 import com.converterapp.model.HierarchyElement;
 import com.converterapp.model.JsonDto;
