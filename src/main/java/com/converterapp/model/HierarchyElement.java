@@ -4,13 +4,17 @@ import java.util.HashMap;
 
 public abstract class HierarchyElement {
     private String tagName;
-    private HashMap<String, String> attributes;
-    private Object content;
+    final private HashMap<String, String> attributes;
+    private String content;
+    private boolean isArray;
+    private boolean isElement;
 
-    HierarchyElement(String tagName, HashMap<String, String> attributes, Object content) {
+    HierarchyElement(String tagName, HashMap<String, String> attributes, String content, boolean isArray, boolean isElement) {
         this.tagName = tagName;
         this.attributes = attributes;
         this.content = content;
+        this.isArray = isArray;
+        this.isElement = isElement;
     }
 
     public String getTagName() {
@@ -25,12 +29,36 @@ public abstract class HierarchyElement {
         return attributes;
     }
 
-    public Object getContent() {
+    public String getContent() {
         return content;
     }
 
-    public void setContent(Object o) {
-        this.content = o;
+    public boolean isArray() {
+        return this.isArray;
     }
 
+    public void setArray(boolean b) {
+        this.isArray = b;
+    }
+
+    public boolean isElement() {
+        return this.isElement;
+    }
+
+    public boolean isOnlyContent() {
+        return this.isElement;
+    }
+
+    public void setOnlyContent(boolean b) {
+        this.isElement = b;
+    }
+
+
+    public void setElement(boolean isElement) {
+        this.isElement = isElement;
+    }
+
+    public void setContent(String s) {
+        this.content = s;
+    }
 }

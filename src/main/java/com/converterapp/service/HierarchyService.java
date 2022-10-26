@@ -12,24 +12,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class HierarchyUtil {
+public class HierarchyService {
     public static String createHierarchyFromFileContent(String fileContent) {
         return FileValidator.isXML(fileContent) ?
-                Converter.createXmlDtoFromFileContent(fileContent).getHierarchy() :
+                XmlDtoReader.readXmlDto(new StringBuilder(fileContent)).getHierarchy() :
                 FileValidator.isJSON(fileContent) ?
-                        Converter.createJsonDtoListFromFileContent(fileContent, true).stream()
+                        JsonDtoReader.readJsonDtoList(new StringBuilder(fileContent), true).stream()
                                 .map(JsonDto::getHierarchy).collect(Collectors.joining()) : "";
     }
 
     public static XmlDto createXmlDtoFromHierarchy(String hierarchy) {
-        List<XmlDto> listXml = createDtoListFromHierarchy(hierarchy, new XmlDto("", new HashMap<>(), new ArrayList<>(), "", false));
+        List<XmlDto> listXml = createDtoListFromHierarchy(hierarchy, XmlDto.generateNonElementXmlDto("", new HashMap<>(), "", false, new ArrayList<>()));
         return listXml.size() == 1 ?
                 listXml.get(0) :
-                new XmlDto("root", null, listXml, null, false);
+                XmlDto.generateNonElementXmlDto("root", null, null, false, listXml);
     }
 
     public static List<JsonDto> createJsonDtoListFromHierarchy(String hierarchy) {
-        return createDtoListFromHierarchy(hierarchy, new JsonDto("", new HashMap<>(), new ArrayList<>(), null, true, false));
+        return createDtoListFromHierarchy(hierarchy, JsonDto.generateJsonDto("", new HashMap<>(), null, true, false, new ArrayList<>()));
     }
 
 
@@ -38,10 +38,8 @@ public class HierarchyUtil {
         Pattern pathPattern = Pattern.compile("path.*?=(.*?)\\n", Pattern.DOTALL);
         Pattern valuePattern = Pattern.compile("value.*?=(.*?)\\n", Pattern.DOTALL);
         Pattern attributesPattern = Pattern.compile("(attributes.*?:.*?\\n)(((.*?)(?=Element))|.*)", Pattern.DOTALL);
-
         Pattern elementGroupPattern = Pattern.compile("[^\\n]*\\n(path([^=]*?)=([^\\n]*?))\\n(.*?)(?!.*\\3)(.*?)(?=(Element|($)))", Pattern.DOTALL);
         Matcher elementGroupMatcher = elementGroupPattern.matcher(hierarchy);
-
         String tagName = null, content = null;
         HashMap<String, String> attributes = null;
         List<T> listOutput = new ArrayList<>();
@@ -85,8 +83,8 @@ public class HierarchyUtil {
             }
             listOutput.add(
                     dtoTypeObject instanceof XmlDto ?
-                            (T) new XmlDto(tagName, attributes, (List<XmlDto>) children, content, false) :
-                            (T) new JsonDto(tagName, attributes, (List<JsonDto>) children, content, false, false)
+                            (T) XmlDto.generateNonElementXmlDto(tagName, attributes, content, false, (List<XmlDto>) children) :
+                            (T) JsonDto.generateJsonDto(tagName, attributes, content, false, false, (List<JsonDto>) children)
             );
 
         }

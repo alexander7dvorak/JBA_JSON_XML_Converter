@@ -1,7 +1,5 @@
 package com.converterapp.service;
 
-import com.converterapp.util.FileValidator;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Scanner;
