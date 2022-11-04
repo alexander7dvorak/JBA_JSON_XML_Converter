@@ -12,15 +12,15 @@ import java.nio.file.Path;
 public class ConsoleUIProgram {
 
     public static void main(String[] args) throws IOException {
-        ConsoleDialog cd = ConsoleDialog.getInstance();
+        Dialog dialog = ConsoleDialog.getInstance();
         if (args.length == 0) {
-            run(cd);
+            run(dialog);
         } else {
-            test(args, cd);
+            test(args, dialog);
         }
     }
 
-    private static void run(ConsoleDialog cd) throws IOException {
+    private static void run(Dialog cd) throws IOException {
         Path path = cd.userPromptFilePath();
         String content = Files.readString(path);
         if (FileValidator.isXML(content)) {
@@ -34,7 +34,7 @@ public class ConsoleUIProgram {
         }
     }
 
-    private static void test(String[] args, ConsoleDialog cd) {
+    private static void test(String[] args, Dialog cd) {
         String content;
         switch (args[0]) {
             case "stage1test" -> {
