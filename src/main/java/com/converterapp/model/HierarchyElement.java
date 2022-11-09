@@ -41,15 +41,15 @@ public abstract class HierarchyElement {
         return this.isElement;
     }
 
-    public void setOnlyContent(boolean b) {
-        this.isElement = b;
+    public void setOnlyContent(boolean isElement) {
+        this.isElement = isElement;
     }
 
     public void setElement(boolean isElement) {
         this.isElement = isElement;
     }
 
-    public void setContent(String s) {
-        this.content = s;
+    public void setContent(String content) {
+        this.content = content;
     }
 }
