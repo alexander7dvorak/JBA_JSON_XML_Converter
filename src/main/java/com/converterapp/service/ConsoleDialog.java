@@ -17,7 +17,7 @@ public class ConsoleDialog implements Dialog {
     }
 
     @Override
-    public Path userPromptFilePath() {
+    public Path getUserInput() {
         printFilePrompt();
         String filePath = scanner.nextLine();
         while (!FileValidator.filePathExists(filePath)) {

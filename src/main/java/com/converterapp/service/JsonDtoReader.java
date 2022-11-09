@@ -195,10 +195,8 @@ public class JsonDtoReader {
 
     private static void processJsonDtoAfterDoubleDots(StringBuilder fileContentSB, String tagName, boolean root, List<JsonDto> output) {
         if (fileContentSB.toString().indexOf(':') != -1) {
-            List<JsonDto> children = new ArrayList<>();
-            HashMap<String, String> tagAttributes = new HashMap<>();
             String content = StringService.getValueBetweenDoubleDotsAndComa(fileContentSB.toString());
-            output.add(JsonDto.generateJsonDto(tagName, tagAttributes, content, root, false, children));
+            output.add(JsonDto.generateJsonDto(tagName, new HashMap<>(), content, root, false, new ArrayList<>()));
         }
     }
 

@@ -21,7 +21,7 @@ public class ConsoleUIProgram {
     }
 
     private static void run(Dialog cd) throws IOException {
-        Path path = cd.userPromptFilePath();
+        Path path = cd.getUserInput();
         String content = Files.readString(path);
         if (FileValidator.isXML(content)) {
             System.out.println(XmlDtoReader.readXmlDto(new StringBuilder(content)).getHierarchy());
