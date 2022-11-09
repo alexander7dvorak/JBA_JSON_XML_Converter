@@ -3,7 +3,13 @@ package com.converterapp;
 import com.converterapp.model.AppConstants;
 import com.converterapp.model.ConsoleArgs;
 import com.converterapp.model.JsonDto;
-import com.converterapp.service.*;
+import com.converterapp.service.ConsoleDialog;
+import com.converterapp.service.Converter;
+import com.converterapp.service.Dialog;
+import com.converterapp.service.FileValidator;
+import com.converterapp.service.HierarchyService;
+import com.converterapp.service.JsonDtoReader;
+import com.converterapp.service.XmlDtoReader;
 
 import java.io.File;
 import java.io.IOException;
