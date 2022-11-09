@@ -15,7 +15,9 @@ public class Converter {
 
     public static String jsonToXML(String jsonString) {
         List<JsonDto> jsonObjectsList = JsonDtoReader.readJsonDtoList(new StringBuilder(jsonString), true);
-        String jsonObjectsListString = jsonObjectsList.stream().map(jsonDto -> XmlDto.generateXmlDto(jsonDto).toString()).collect(Collectors.joining());
+        String jsonObjectsListString = jsonObjectsList.stream().map(
+                jsonDto -> XmlDto.generateXmlDto(jsonDto).toString()
+        ).collect(Collectors.joining());
         return jsonObjectsList.size() > 1 ?
                 "<root>%s</root>".formatted(jsonObjectsListString) :
                 jsonObjectsListString;
