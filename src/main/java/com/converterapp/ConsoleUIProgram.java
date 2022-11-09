@@ -1,5 +1,6 @@
 package com.converterapp;
 
+import com.converterapp.model.ConsoleArgs;
 import com.converterapp.model.JsonDto;
 import com.converterapp.service.*;
 
@@ -36,8 +37,8 @@ public class ConsoleUIProgram {
 
     private static void test(String[] args, Dialog cd) {
         String content;
-        switch (args[0]) {
-            case "stage1test" -> {
+        switch (ConsoleArgs.valueOf(args[0].toUpperCase())) {
+            case STAGE1TEST -> {
                 content = cd.userPromptLine();
                 if (FileValidator.isXML(content)) {
                     System.out.println(Converter.xmlToJSON(content));
@@ -47,7 +48,7 @@ public class ConsoleUIProgram {
                     System.out.println("Content is neither xml nor json");
                 }
             }
-            case "stage2test", "stage5test", "stage6test" -> {
+            case STAGE2TEST, STAGE5TEST, STAGE6TEST -> {
                 content = org.assertj.core.util.Files.contentOf(new File("test.txt"), StandardCharsets.UTF_8);
                 if (FileValidator.isXML(content)) {
                     System.out.println(Converter.xmlToJSON(content));
@@ -57,7 +58,7 @@ public class ConsoleUIProgram {
                     System.out.println("Content is neither xml nor json");
                 }
             }
-            case "stage3test", "stage4test" -> {
+            case STAGE3TEST, STAGE4TEST -> {
                 content = org.assertj.core.util.Files.contentOf(new File("test.txt"), StandardCharsets.UTF_8);
                 System.out.println(HierarchyService.createHierarchyFromFileContent(content));
             }
