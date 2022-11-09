@@ -2,6 +2,7 @@ package com.converterapp.model;
 
 import com.converterapp.service.JsonDtoReader;
 import com.converterapp.service.StringService;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,7 +72,7 @@ public class JsonDto extends HierarchyElement {
                                           final boolean root, final boolean onlyContent, final boolean isArray) {
         List<JsonDto> childrenJSON = new ArrayList<>();
         if (isArray) {
-            if (fileContent != null && !fileContent.isBlank()) {
+            if (!StringUtils.isBlank(fileContent)) {
                 childrenJSON.addAll(createArrayChildrenList(fileContent));
             }
         }
