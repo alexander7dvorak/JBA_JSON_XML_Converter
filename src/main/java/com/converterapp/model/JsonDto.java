@@ -288,13 +288,13 @@ public class JsonDto extends HierarchyElement {
 
     private void arrayToString(StringBuilder outputSB) {
         int counter = 0;
-        int attrN = getAttributes().size();
+        int numberOfAttributes = getAttributes().size();
         if (super.getAttributes().size() > 0) {
             outputSB.append("\"%s\" : {".formatted(getTagName()));
             for (Map.Entry<String, String> entry : getAttributes().entrySet()) {
                 counter++;
                 outputSB.append("\n\"@%s\":\"%s\"".formatted(entry.getKey(), entry.getValue()));
-                if (counter != attrN) {
+                if (counter != numberOfAttributes) {
                     outputSB.append(",");
                 }
             }
@@ -328,13 +328,13 @@ public class JsonDto extends HierarchyElement {
 
     private void elementToString(StringBuilder outputSB) {
         int counter = 0;
-        int attrN = getAttributes().size();
+        int numberOfAttributes = getAttributes().size();
         if (super.getAttributes().size() > 0) {
             outputSB.append("{");
             for (Map.Entry<String, String> entry : getAttributes().entrySet()) {
                 counter++;
                 outputSB.append("\n\"@%s\":\"%s\"".formatted(entry.getKey(), entry.getValue()));
-                if (counter != attrN) {
+                if (counter != numberOfAttributes) {
                     outputSB.append(",");
                 }
             }
