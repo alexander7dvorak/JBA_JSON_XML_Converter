@@ -96,30 +96,23 @@ public class JsonDto extends HierarchyElement {
     private static List<JsonDto> createArrayChildrenList(String fileContent) {
         String content;
         List<JsonDto> output = new ArrayList<>();
-        int indexOfComma;
-        int indexOfOpeningBrace;
-        int indexOfOpeningOfArray;
-        int indexOfOpeningQuote;
-        int currentIndex;
+        StringBuilder fileContentSB = new StringBuilder(fileContent);
+        SymbolsIndexes indexes = new SymbolsIndexes(fileContentSB);
         do {
-            indexOfComma = fileContent.indexOf(',') == -1 ? Integer.MAX_VALUE : fileContent.indexOf(',');
-            indexOfOpeningBrace = fileContent.indexOf('{') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('{');
-            indexOfOpeningOfArray = fileContent.indexOf('[') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('[');
-            indexOfOpeningQuote = fileContent.indexOf('"') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('"');
-            currentIndex = Math.min(indexOfOpeningBrace, Math.min(indexOfComma, Math.min(indexOfOpeningQuote, indexOfOpeningOfArray)));
-            if (currentIndex == Integer.MAX_VALUE) {
-                output.add(generateJsonDto(null, fileContent.trim(), false, true, false));
+            indexes.refreshIndexes();
+            if (indexes.getCurrentIndex() == Integer.MAX_VALUE) {
+                output.add(generateJsonDto(null, fileContentSB.toString().trim(), false, true, false));
                 break;
-            } else if (currentIndex == indexOfOpeningOfArray) {
-                content = StringService.getStringBetweenBraces(fileContent, currentIndex, '[', ']');
-                fileContent = fileContent.replaceFirst("\\[" + content.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + ']', "");
+            } else if (indexes.getCurrentIndex() == indexes.getIndexOfOpeningOfArray()) {
+                content = StringService.getStringBetweenBraces(fileContentSB.toString(), indexes.getCurrentIndex(), '[', ']');
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.toString().replaceFirst("\\[" + content.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + ']', ""));
                 if (content.matches("\\s*")) {
                     output.add(generateJsonDto(null, null, false, true, true));
                 } else {
                     output.add(generateJsonDto(null, content, false, false, true));
                 }
-            } else if (currentIndex == indexOfOpeningBrace) {
-                String childrenContent = StringService.getStringBetweenBraces(fileContent, currentIndex, '{', '}');
+            } else if (indexes.getCurrentIndex() == indexes.getIndexOfOpeningBrace()) {
+                String childrenContent = StringService.getStringBetweenBraces(fileContentSB.toString(), indexes.getCurrentIndex(), '{', '}');
                 if (childrenContent.matches("\\s*")) {
                     output.add(generateJsonDto(null, new HashMap<>(), "", true, false, null));
                 } else {
@@ -189,26 +182,24 @@ public class JsonDto extends HierarchyElement {
                     output.add(generateJsonDto("element", tagAttributes, content, false, true, childrenInsideBraces));
 
                 }
-                fileContent = fileContent.replaceFirst("\\{" + childrenContent.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + '}', "");
-
-            } else if (currentIndex == indexOfComma) {
-                output.add(generateJsonDto(null, fileContent.substring(0, fileContent.indexOf(',')).trim(), false, true, false));
-                fileContent = fileContent.substring(indexOfComma);
-            } else if (currentIndex == indexOfOpeningQuote) {
-                String tagName = StringService.getTagName(fileContent);
-                fileContent = fileContent.replaceFirst('"' + tagName + '"', "");
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.toString().replaceFirst("\\{" + childrenContent.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + '}', ""));
+            } else if (indexes.getCurrentIndex() == indexes.getIndexOfComma()) {
+                output.add(generateJsonDto(null, fileContentSB.substring(0, fileContentSB.toString().indexOf(',')).trim(), false, true, false));
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.substring(indexes.getIndexOfComma()));
+            } else if (indexes.getCurrentIndex() == indexes.getIndexOfOpeningQuote()) {
+                String tagName = StringService.getTagName(fileContentSB.toString());
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.toString().replaceFirst('"' + tagName + '"', ""));
                 output.add(generateJsonDto(null, tagName, false, true, false));
             }
-            indexOfOpeningBrace = fileContent.indexOf('{') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('{');
-            indexOfOpeningOfArray = fileContent.indexOf('[') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('[');
-            indexOfOpeningQuote = fileContent.indexOf('"') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('"');
-            indexOfComma = fileContent.indexOf(',') == -1 ? Integer.MAX_VALUE : fileContent.indexOf(',');
-            if (indexOfComma < indexOfOpeningBrace && indexOfComma < indexOfOpeningQuote && indexOfComma < indexOfOpeningOfArray) {
-                fileContent = fileContent.replaceFirst(",", "");
+            indexes.refreshIndexes();
+            if (indexes.getIndexOfComma() < indexes.getIndexOfOpeningBrace()
+                    && indexes.getIndexOfComma() < indexes.getIndexOfOpeningQuote()
+                    && indexes.getIndexOfComma() < indexes.getIndexOfOpeningOfArray()) {
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.toString().replaceFirst(",", ""));
             } else {
                 break;
             }
-        } while (currentIndex != -1);
+        } while (indexes.getCurrentIndex() != -1);
         return output;
     }
 
