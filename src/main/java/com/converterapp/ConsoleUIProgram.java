@@ -49,7 +49,7 @@ public class ConsoleUIProgram {
     private static void test(String[] args, Dialog cd) {
         String content;
         switch (ConsoleArgs.valueOf(args[0].toUpperCase())) {
-            case STAGE1TEST -> {
+            case STAGE_1_TEST -> {
                 content = cd.userPromptLine();
                 if (FileValidator.isXML(content)) {
                     System.out.println(Converter.xmlToJSON(content));
@@ -59,7 +59,7 @@ public class ConsoleUIProgram {
                     System.out.println(AppConstants.CONTENT_IS_NEITHER_XML_NOR_JSON);
                 }
             }
-            case STAGE2TEST, STAGE5TEST, STAGE6TEST -> {
+            case STAGE_2_TEST, STAGE_5_TEST, STAGE_6_TEST -> {
                 content = org.assertj.core.util.Files.contentOf(new File(AppConstants.TEST_DOT_TXT), StandardCharsets.UTF_8);
                 if (FileValidator.isXML(content)) {
                     System.out.println(Converter.xmlToJSON(content));
@@ -69,7 +69,7 @@ public class ConsoleUIProgram {
                     System.out.println(AppConstants.CONTENT_IS_NEITHER_XML_NOR_JSON);
                 }
             }
-            case STAGE3TEST, STAGE4TEST -> {
+            case STAGE_3_TEST, STAGE_4_TEST -> {
                 content = org.assertj.core.util.Files.contentOf(new File(AppConstants.TEST_DOT_TXT), StandardCharsets.UTF_8);
                 System.out.println(HierarchyService.createHierarchyFromFileContent(content));
             }

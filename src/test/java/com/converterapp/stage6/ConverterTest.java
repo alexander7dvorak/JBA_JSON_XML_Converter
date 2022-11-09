@@ -6,8 +6,6 @@ import org.hyperskill.hstest.testcase.CheckResult;
 import org.hyperskill.hstest.testcase.TestCase;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
 import org.w3c.dom.*;
 
 import javax.xml.parsers.*;
@@ -97,7 +95,6 @@ public class ConverterTest extends StageTest<Clue> {
                         "    </data>\n" +
                         "</transactions>"
         );
-
 
 
         allTests.put(
@@ -236,7 +233,6 @@ public class ConverterTest extends StageTest<Clue> {
                         "    ]\n" +
                         "}"
         );
-
 
 
         allTests.put(
@@ -1015,7 +1011,7 @@ public class ConverterTest extends StageTest<Clue> {
             String answer = allTests.get(input);
 
             TestCase<Clue> test = new TestCase<>();
-            test.addArguments("stage6test");
+            test.addArguments("stage_6_test");
             test.addFile("test.txt", input);
             test.setAttach(new Clue(answer, input));
 

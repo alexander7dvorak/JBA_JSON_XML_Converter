@@ -27,7 +27,7 @@ public class ConverterTest extends ExtendedTest {
     @DynamicTest(data = "clues")
     CheckResult simpleTest(final String input, final String expected) {
         final var program = new TestedProgram();
-        program.start("stage1test");
+        program.start("stage_1_test");
 
         final var actual = SPACES.matcher(program.execute(input)).replaceAll("");
 

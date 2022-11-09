@@ -1,4 +1,5 @@
 package com.converterapp.stage2;
+
 import com.google.gson.*;
 import org.hyperskill.hstest.stage.StageTest;
 import org.hyperskill.hstest.testcase.CheckResult;
@@ -116,7 +117,7 @@ public class ConverterTest extends StageTest<Clue> {
             String answer = allTests.get(input);
 
             TestCase<Clue> test = new TestCase<>();
-            test.addArguments("stage2test");
+            test.addArguments("stage_2_test");
 
             test.addFile("test.txt", input);
             test.setAttach(new Clue(answer, input));

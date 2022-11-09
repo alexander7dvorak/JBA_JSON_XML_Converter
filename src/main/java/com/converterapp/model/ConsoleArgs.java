@@ -2,10 +2,10 @@ package com.converterapp.model;
 
 public enum ConsoleArgs {
 
-    STAGE1TEST,
-    STAGE2TEST,
-    STAGE3TEST,
-    STAGE4TEST,
-    STAGE5TEST,
-    STAGE6TEST
+    STAGE_1_TEST,
+    STAGE_2_TEST,
+    STAGE_3_TEST,
+    STAGE_4_TEST,
+    STAGE_5_TEST,
+    STAGE_6_TEST
 }
