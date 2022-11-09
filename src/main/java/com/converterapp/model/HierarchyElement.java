@@ -45,7 +45,6 @@ public abstract class HierarchyElement {
         this.isElement = b;
     }
 
-
     public void setElement(boolean isElement) {
         this.isElement = isElement;
     }

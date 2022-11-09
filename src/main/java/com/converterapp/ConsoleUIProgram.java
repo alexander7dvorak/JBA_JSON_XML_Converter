@@ -16,8 +16,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConsoleUIProgram {
+    private static final Logger logger
+            = Logger.getLogger(ConsoleUIProgram.class.getName());
 
     public static void main(String[] args) throws IOException {
         Dialog dialog = ConsoleDialog.getInstance();
@@ -32,13 +36,13 @@ public class ConsoleUIProgram {
         Path path = cd.getUserInput();
         String content = Files.readString(path);
         if (FileValidator.isXML(content)) {
-            System.out.println(XmlDtoReader.readXmlDto(new StringBuilder(content)).getHierarchy());
+            logger.log(Level.INFO, XmlDtoReader.readXmlDto(new StringBuilder(content)).getHierarchy());
         } else if (FileValidator.isJSON(content)) {
             for (JsonDto json : JsonDtoReader.readJsonDtoList(new StringBuilder(content), true)) {
-                System.out.println(json.getHierarchy());
+                logger.log(Level.INFO, json.getHierarchy());
             }
         } else {
-            System.out.println(AppConstants.CONTENT_IS_NEITHER_XML_NOR_JSON);
+            logger.log(Level.INFO, AppConstants.CONTENT_IS_NEITHER_XML_NOR_JSON);
         }
     }
 
