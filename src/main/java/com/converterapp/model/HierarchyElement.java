@@ -6,7 +6,7 @@ public abstract class HierarchyElement {
     private String tagName;
     final private HashMap<String, String> attributes;
     private String content;
-    private boolean isArray;
+    private final boolean isArray;
     private boolean isElement;
 
     HierarchyElement(String tagName, HashMap<String, String> attributes, String content, boolean isArray, boolean isElement) {
@@ -37,15 +37,7 @@ public abstract class HierarchyElement {
         return this.isArray;
     }
 
-    public void setArray(boolean b) {
-        this.isArray = b;
-    }
-
     public boolean isElement() {
-        return this.isElement;
-    }
-
-    public boolean isOnlyContent() {
         return this.isElement;
     }
 
