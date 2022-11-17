@@ -34,11 +34,10 @@ public class SymbolsIndexes {
     }
 
     public void refreshIndexes() {
-        String fileContent = fileContentSB.toString();
-        indexOfComma = fileContent.indexOf(',') == -1 ? Integer.MAX_VALUE : fileContent.indexOf(',');
-        indexOfOpeningBrace = fileContent.indexOf('{') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('{');
-        indexOfOpeningOfArray = fileContent.indexOf('[') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('[');
-        indexOfOpeningQuote = fileContent.indexOf('"') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('"');
+        refreshIndexOfComma();
+        refreshIndexOfOpeningBrace();
+        refreshIndexOfOpeningOfArray();
+        refreshIndexOfOpeningQuote();
         refreshCurrentIndex();
     }
 
