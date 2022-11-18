@@ -1,7 +1,8 @@
 package com.converterapp.model;
 
-import com.converterapp.util.Converter;
-import com.converterapp.util.StringUtil;
+import com.converterapp.service.JsonDtoReader;
+import com.converterapp.service.StringService;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,26 +13,20 @@ import java.util.stream.Collectors;
 public class JsonDto extends HierarchyElement {
     private final List<JsonDto> children;
     private final boolean root;
-    private final boolean onlyContent;
-    private final boolean isArray;
 
-    public boolean isArray() {
-        return this.isArray;
+    private JsonDto(String tagName, HashMap<String, String> attributes, String content, List<JsonDto> children, boolean root, boolean onlyContent, boolean isArray) {
+        super(tagName, attributes, content, isArray, onlyContent);
+        this.root = root;
+        this.children = children;
     }
 
-    public boolean isElement() {
-        return this.onlyContent;
-    }
-
-    private JsonDto(XmlDto xml, final boolean root) {
-        super(xml.getTagName(), xml.getAttributes(), xml.getContent());
-        this.onlyContent = xml.isElement();
+    public static JsonDto generateNotRootJsonDto(XmlDto xml) {
         List<JsonDto> childrenJSON = new ArrayList<>();
         boolean isArray;
         if (xml.isArray()) {
             List<XmlDto> childrenXML = xml.getChildren();
             for (XmlDto child : childrenXML) {
-                childrenJSON.add(new JsonDto(child, false));
+                childrenJSON.add(generateNotRootJsonDto(child));
             }
             isArray = true;
         } else {
@@ -40,7 +35,7 @@ public class JsonDto extends HierarchyElement {
                     formArraysFromSimilarChildren(tempChildren) :
                     new ArrayList<>();
             for (XmlDto child : childrenXML) {
-                childrenJSON.add(new JsonDto(child, false));
+                childrenJSON.add(generateNotRootJsonDto(child));
             }
             isArray = childrenJSON.size() != 0 && childrenJSON.size() == childrenXML.size();
             for (JsonDto child : childrenJSON) {
@@ -50,15 +45,10 @@ public class JsonDto extends HierarchyElement {
                 }
             }
         }
-        this.isArray = isArray;
-        this.children = childrenJSON;
-        this.root = root;
+        return new JsonDto(xml.getTagName(), xml.getAttributes(), xml.getContent(), childrenJSON, false, xml.isElement(), isArray);
     }
 
-    public JsonDto(XmlDto xml) {
-        super(xml.getTagName(), xml.getAttributes(), xml.getContent() == null ? null : ((String) xml.getContent()).trim());
-        this.onlyContent = xml.isElement();
-        this.children = new ArrayList<>();
+    public static JsonDto generateRootJsonDto(XmlDto xml) {
         List<JsonDto> childrenJSON = new ArrayList<>();
         List<XmlDto> childrenXML = formArraysFromSimilarChildren(xml.getChildren());
         boolean tempIsArray = true;
@@ -68,60 +58,68 @@ public class JsonDto extends HierarchyElement {
                 break;
             }
         }
-        this.isArray = childrenXML.size() != 0 && tempIsArray && childrenXML.size() == xml.getChildren().size();
         for (XmlDto child : childrenXML) {
-            childrenJSON.add(new JsonDto(child, false));
+            childrenJSON.add(generateNotRootJsonDto(child));
         }
-        this.children.addAll(childrenJSON);
-        this.root = true;
+        return new JsonDto(xml.getTagName(), xml.getAttributes(),
+                xml.getContent() == null ? null : xml.getContent().trim(),
+                childrenJSON, true, xml.isElement(),
+                childrenXML.size() != 0 && tempIsArray && childrenXML.size() == xml.getChildren().size()
+        );
     }
 
-    public JsonDto(String tagName, String fileContent, final boolean root, final boolean onlyContent, final boolean isArray) {
-        super(tagName == null ? "element" : tagName, new HashMap<>(), onlyContent ? fileContent : null);
-        this.root = root;
-        this.onlyContent = onlyContent;
-        this.isArray = isArray;
-        this.children = new ArrayList<>();
+    public static JsonDto generateJsonDto(String tagName, String fileContent,
+                                          final boolean root, final boolean onlyContent, final boolean isArray) {
+        List<JsonDto> childrenJSON = new ArrayList<>();
         if (isArray) {
-            if (fileContent != null && !fileContent.isBlank()) {
-                this.children.addAll(createArrayChildrenList(fileContent));
+            if (!StringUtils.isBlank(fileContent)) {
+                childrenJSON.addAll(createArrayChildrenList(fileContent));
             }
         }
+        return new JsonDto(tagName == null ? "element" : tagName,
+                new HashMap<>(),
+                onlyContent ? fileContent : null,
+                childrenJSON, root,
+                onlyContent, isArray
+        );
     }
 
-    private List<JsonDto> createArrayChildrenList(String fileContent) {
+    public static JsonDto generateJsonDto(String tagName, HashMap<String, String> attributes, String content,
+                                          final boolean root, final boolean onlyContent, List<JsonDto> children) {
+        return new JsonDto(onlyContent || tagName == null ? "element" : tagName,
+                attributes,
+                content,
+                children, root,
+                onlyContent, false
+        );
+    }
+
+    private static List<JsonDto> createArrayChildrenList(String fileContent) {
         String content;
         List<JsonDto> output = new ArrayList<>();
-        int indexOfComma;
-        int indexOfOpeningBrace;
-        int indexOfOpeningOfArray;
-        int indexOfOpeningQuote;
-        int currentIndex;
+        StringBuilder fileContentSB = new StringBuilder(fileContent);
+        SymbolsIndexes indexes = new SymbolsIndexes(fileContentSB);
         do {
-            indexOfComma = fileContent.indexOf(',') == -1 ? Integer.MAX_VALUE : fileContent.indexOf(',');
-            indexOfOpeningBrace = fileContent.indexOf('{') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('{');
-            indexOfOpeningOfArray = fileContent.indexOf('[') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('[');
-            indexOfOpeningQuote = fileContent.indexOf('"') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('"');
-            currentIndex = Math.min(indexOfOpeningBrace, Math.min(indexOfComma, Math.min(indexOfOpeningQuote, indexOfOpeningOfArray)));
-            if (currentIndex == Integer.MAX_VALUE) {
-                output.add(new JsonDto(null, fileContent.trim(), false, true, false));
+            indexes.refreshIndexes();
+            if (indexes.getCurrentIndex() == Integer.MAX_VALUE) {
+                output.add(generateJsonDto(null, fileContentSB.toString().trim(), false, true, false));
                 break;
-            } else if (currentIndex == indexOfOpeningOfArray) {
-                content = StringUtil.getStringBetweenBraces(fileContent, currentIndex, '[', ']');
-                fileContent = fileContent.replaceFirst("\\[" + content.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + ']', "");
+            } else if (indexes.getCurrentIndex() == indexes.getIndexOfOpeningOfArray()) {
+                content = StringService.getStringBetweenBraces(fileContentSB.toString(), indexes.getCurrentIndex(), '[', ']');
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.toString().replaceFirst("\\[" + content.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + ']', ""));
                 if (content.matches("\\s*")) {
-                    output.add(new JsonDto(null, null, false, true, true));
+                    output.add(generateJsonDto(null, null, false, true, true));
                 } else {
-                    output.add(new JsonDto(null, content, false, false, true));
+                    output.add(generateJsonDto(null, content, false, false, true));
                 }
-            } else if (currentIndex == indexOfOpeningBrace) {
-                String childrenContent = StringUtil.getStringBetweenBraces(fileContent, currentIndex, '{', '}');
+            } else if (indexes.getCurrentIndex() == indexes.getIndexOfOpeningBrace()) {
+                String childrenContent = StringService.getStringBetweenBraces(fileContentSB.toString(), indexes.getCurrentIndex(), '{', '}');
                 if (childrenContent.matches("\\s*")) {
-                    output.add(new JsonDto(null, new HashMap<>(), null, "", true, false));
+                    output.add(generateJsonDto(null, new HashMap<>(), "", true, false, null));
                 } else {
                     content = null;
                     List<JsonDto> childrenInsideBraces = new ArrayList<>();
-                    List<JsonDto> childrenDto = Converter.createJsonDtoListFromFileContent(childrenContent, false);
+                    List<JsonDto> childrenDto = JsonDtoReader.readJsonDtoList(new StringBuilder(childrenContent), false);
                     List<String> childrenDtoTagNames = childrenDto.stream().map(JsonDto::getTagName).collect(Collectors.toCollection(ArrayList::new));
                     List<JsonDto> childrenToBeRemoved = new ArrayList<>();
                     HashMap<String, String> tagAttributes = new HashMap<>();
@@ -167,14 +165,14 @@ public class JsonDto extends HierarchyElement {
                                     childTagName = childTagName.substring(1);
                                     child.setTagName(childTagName);
                                 } else {
-                                    content = child.getContent() == null ? "" : (String) child.getContent();
+                                    content = child.getContent() == null ? "" : child.getContent();
                                 }
                             } else if (childTagName.startsWith("@") && childTagName.length() > 1 && child.getChildren().size() == 0) {
                                 if (wrong) {
                                     childTagName = childTagName.substring(1);
                                     child.setTagName(childTagName);
                                 } else {
-                                    tagAttributes.put(childTagName.substring(1), (String) (child.getContent().equals("null") ? "" : child.getContent()));
+                                    tagAttributes.put(childTagName.substring(1), child.getContent().equals("null") ? "" : child.getContent());
                                 }
                             }
                             if (!childTagName.startsWith("#") && !childTagName.startsWith("@")) {
@@ -182,43 +180,31 @@ public class JsonDto extends HierarchyElement {
                             }
                         }
                     }
-                    output.add(new JsonDto("element", tagAttributes, childrenInsideBraces, content, root, true));
+                    output.add(generateJsonDto("element", tagAttributes, content, false, true, childrenInsideBraces));
 
                 }
-                fileContent = fileContent.replaceFirst("\\{" + childrenContent.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + '}', "");
-
-            } else if (currentIndex == indexOfComma) {
-                output.add(new JsonDto(null, fileContent.substring(0, fileContent.indexOf(',')).trim(), false, true, false));
-                fileContent = fileContent.substring(indexOfComma);
-            } else if (currentIndex == indexOfOpeningQuote) {
-                String tagName = StringUtil.getTagName(fileContent);
-                fileContent = fileContent.replaceFirst('"' + tagName + '"', "");
-                output.add(new JsonDto(null, tagName, false, true, false));
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.toString().replaceFirst("\\{" + childrenContent.replaceAll("\\{", "\\\\{").replaceAll("\\[", "\\\\[") + '}', ""));
+            } else if (indexes.getCurrentIndex() == indexes.getIndexOfComma()) {
+                output.add(generateJsonDto(null, fileContentSB.substring(0, fileContentSB.toString().indexOf(',')).trim(), false, true, false));
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.substring(indexes.getIndexOfComma()));
+            } else if (indexes.getCurrentIndex() == indexes.getIndexOfOpeningQuote()) {
+                String tagName = StringService.getTagName(fileContentSB.toString());
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.toString().replaceFirst('"' + tagName + '"', ""));
+                output.add(generateJsonDto(null, tagName, false, true, false));
             }
-            indexOfOpeningBrace = fileContent.indexOf('{') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('{');
-            indexOfOpeningOfArray = fileContent.indexOf('[') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('[');
-            indexOfOpeningQuote = fileContent.indexOf('"') == -1 ? Integer.MAX_VALUE : fileContent.indexOf('"');
-            indexOfComma = fileContent.indexOf(',') == -1 ? Integer.MAX_VALUE : fileContent.indexOf(',');
-            if (indexOfComma < indexOfOpeningBrace && indexOfComma < indexOfOpeningQuote && indexOfComma < indexOfOpeningOfArray) {
-                fileContent = fileContent.replaceFirst(",", "");
+            indexes.refreshIndexes();
+            if (indexes.getIndexOfComma() < indexes.getIndexOfOpeningBrace()
+                    && indexes.getIndexOfComma() < indexes.getIndexOfOpeningQuote()
+                    && indexes.getIndexOfComma() < indexes.getIndexOfOpeningOfArray()) {
+                fileContentSB.replace(0, fileContentSB.length(), fileContentSB.toString().replaceFirst(",", ""));
             } else {
                 break;
             }
-        } while (currentIndex != -1);
+        } while (indexes.getCurrentIndex() != -1);
         return output;
     }
 
-    public JsonDto(String tagName, HashMap<String, String> attributes,
-                   List<JsonDto> children, String content,
-                   final boolean root, final boolean onlyContent) {
-        super(onlyContent || tagName == null ? "element" : tagName, attributes, content);
-        this.onlyContent = onlyContent;
-        this.children = children;
-        this.root = root;
-        this.isArray = false;
-    }
-
-    private List<XmlDto> formArraysFromSimilarChildren(List<XmlDto> childrenList) {
+    private static List<XmlDto> formArraysFromSimilarChildren(List<XmlDto> childrenList) {
         if (childrenList.size() == 0) {
             return new ArrayList<>();
         }
@@ -243,7 +229,7 @@ public class JsonDto extends HierarchyElement {
                             element.setContent("null");
                         }
                     }
-                    xmlListWithArrays.add(new XmlDto("element", elementsInArray, false, true));
+                    xmlListWithArrays.add(XmlDto.generateXmlDtoArray("element", elementsInArray, true));
                 }
                 elementsInArray = new ArrayList<>();
                 elementsInArray.add(currentChild);
@@ -260,7 +246,7 @@ public class JsonDto extends HierarchyElement {
                 }
             }
             if (notArray) {
-                xmlListWithArrays.add(new XmlDto("element", elementsInArray, false, false));
+                xmlListWithArrays.add(XmlDto.generateXmlDtoArray("element", elementsInArray, false));
             } else {
                 xmlListWithArrays.addAll(elementsInArray);
             }
@@ -275,108 +261,85 @@ public class JsonDto extends HierarchyElement {
 
     @Override
     public String toString() {
-        int counter = 0;
         StringBuilder outputSB = new StringBuilder();
         if (root) {
             outputSB.append("{%s".formatted("\n"));
         }
-        int attrN = getAttributes().size();
-        if (isArray) {
-            if (super.getAttributes().size() > 0) {
-                outputSB.append("\"%s\" : {".formatted(getTagName()));
-                for (Map.Entry<String, String> entry : getAttributes().entrySet()) {
-                    counter++;
-                    outputSB.append("\n\"@%s\":\"%s\"".formatted(entry.getKey(), entry.getValue()));
-                    if (counter != attrN) {
-                        outputSB.append(",");
-                    }
-                }
-                counter = 0;
-                outputSB.append(",\n\"#%s\":".formatted(getTagName()));
-            } else if (getTagName() != null && !getTagName().equals("element")) {
-                outputSB.append("\"");
-                outputSB.append(getTagName());
-                outputSB.append("\":");
-            }
-            outputSB.append("[%s".formatted("\n"));
-
-            for (JsonDto child : children) {
-                counter++;
-                if (child.getAttributes().size() == 0 && child.getContent() != null && !child.getContent().equals("null") && child.getChildren().size() == 0) {
-                    outputSB.append("\"");
-                }
-                outputSB.append(child);
-                if (child.getAttributes().size() == 0 && child.getContent() != null && !child.getContent().equals("null") && child.getChildren().size() == 0) {
-                    outputSB.append("\"");
-                }
-                if (counter != children.size()) {
-                    outputSB.append(",%s".formatted("\n"));
-                }
-            }
-            outputSB.append("%s]".formatted("\n"));
-            if (super.getAttributes().size() > 0) {
-                outputSB.append("%s}".formatted("\n"));
-            }
-        } else if (onlyContent) {
-            if (super.getAttributes().size() > 0) {
-                outputSB.append("{");
-                for (Map.Entry<String, String> entry : getAttributes().entrySet()) {
-                    counter++;
-                    outputSB.append("\n\"@%s\":\"%s\"".formatted(entry.getKey(), entry.getValue()));
-                    if (counter != attrN) {
-                        outputSB.append(",");
-                    }
-                }
-                outputSB.append(",\n\"#element\":%s".formatted(
-                        getContent() == null ?
-                                null :
-                                "\"" + getContent().toString() + "\"")
-                );
-                outputSB.append("\n}\n");
-            } else {
-                if (children.size() > 0) {
-                    outputSB.append("{%s".formatted("\n"));
-                }
-                for (JsonDto child : children) {
-                    counter++;
-                    outputSB.append(child);
-                    if (counter != children.size()) {
-                        outputSB.append(",%s".formatted("\n"));
-                    }
-                }
-                if (getContent() != null) {
-                    outputSB.append(getContent().toString());
-                }
-                if (children.size() > 0) {
-                    outputSB.append("%s}".formatted("\n"));
-                }
-            }
+        if (isArray()) {
+            arrayToString(outputSB);
+        } else if (isElement()) {
+            elementToString(outputSB);
         } else {
-            outputSB.append("\"");
-            outputSB.append(super.getTagName());
-            if (super.getAttributes().size() > 0 || children.size() > 0) {
-                outputSB.append("\":{%s".formatted("\n"));
-                for (Map.Entry<String, String> entry : super.getAttributes().entrySet()) {
-                    outputSB.append("\"@%s\":%s".formatted(entry.getKey(), '"' + entry.getValue() + '"'));
-                    counter++;
-                    if (children.size() > 0 || counter != super.getAttributes().size() + 1) {
-                        outputSB.append(",%s".formatted("\n"));
-                    }
-                }
-                if (children.size() > 0 && super.getAttributes().size() > 0) {
-                    outputSB.append("\"#%s\": {".formatted(super.getTagName()));
-                }
-            }
-            String content = ((String) super.getContent());
-            if (children.size() == 0) {
-                if (super.getAttributes().size() == 0) {
-                    outputSB.append("\":%s".formatted(content == null ? null : '"' + content + '"'));
-                } else {
-                    outputSB.append("\"#%s\":%s".formatted(super.getTagName(), content == null ? null : '"' + content + '"'));
-                }
-            }
+            complexToString(outputSB);
+        }
+        if (root) {
+            outputSB.append("%s}".formatted("\n"));
+        }
+        return outputSB.toString();
+    }
 
+    private void arrayToString(StringBuilder outputSB) {
+        int counter = 0;
+        int numberOfAttributes = getAttributes().size();
+        if (super.getAttributes().size() > 0) {
+            outputSB.append("\"%s\" : {".formatted(getTagName()));
+            for (Map.Entry<String, String> entry : getAttributes().entrySet()) {
+                counter++;
+                outputSB.append("\n\"@%s\":\"%s\"".formatted(entry.getKey(), entry.getValue()));
+                if (counter != numberOfAttributes) {
+                    outputSB.append(",");
+                }
+            }
             counter = 0;
+            outputSB.append(",\n\"#%s\":".formatted(getTagName()));
+        } else if (getTagName() != null && !getTagName().equals("element")) {
+            outputSB.append("\"");
+            outputSB.append(getTagName());
+            outputSB.append("\":");
+        }
+        outputSB.append("[%s".formatted("\n"));
+
+        for (JsonDto child : children) {
+            counter++;
+            if (child.getAttributes().size() == 0 && child.getContent() != null && !child.getContent().equals("null") && child.getChildren().size() == 0) {
+                outputSB.append("\"");
+            }
+            outputSB.append(child);
+            if (child.getAttributes().size() == 0 && child.getContent() != null && !child.getContent().equals("null") && child.getChildren().size() == 0) {
+                outputSB.append("\"");
+            }
+            if (counter != children.size()) {
+                outputSB.append(",%s".formatted("\n"));
+            }
+        }
+        outputSB.append("%s]".formatted("\n"));
+        if (super.getAttributes().size() > 0) {
+            outputSB.append("%s}".formatted("\n"));
+        }
+    }
+
+    private void elementToString(StringBuilder outputSB) {
+        int counter = 0;
+        int numberOfAttributes = getAttributes().size();
+        if (super.getAttributes().size() > 0) {
+            outputSB.append("{");
+            for (Map.Entry<String, String> entry : getAttributes().entrySet()) {
+                counter++;
+                outputSB.append("\n\"@%s\":\"%s\"".formatted(entry.getKey(), entry.getValue()));
+                if (counter != numberOfAttributes) {
+                    outputSB.append(",");
+                }
+            }
+            outputSB.append(",\n\"#element\":%s".formatted(
+                    getContent() == null ?
+                            null :
+                            "\"" + getContent() + "\"")
+            );
+            outputSB.append("\n}\n");
+        } else {
+            if (children.size() > 0) {
+                outputSB.append("{%s".formatted("\n"));
+            }
             for (JsonDto child : children) {
                 counter++;
                 outputSB.append(child);
@@ -384,31 +347,80 @@ public class JsonDto extends HierarchyElement {
                     outputSB.append(",%s".formatted("\n"));
                 }
             }
-
-
-            if (super.getAttributes().size() > 0) {
-                outputSB.append("%s}".formatted("\n"));
+            if (getContent() != null) {
+                outputSB.append(getContent());
             }
             if (children.size() > 0) {
                 outputSB.append("%s}".formatted("\n"));
             }
         }
-        if (root) {
-            outputSB.append("%s}".formatted("\n"));
+    }
+
+    private void complexToString(StringBuilder outputSB) {
+        int counter = 0;
+        outputSB.append("\"");
+        outputSB.append(super.getTagName());
+        if (super.getAttributes().size() > 0 || children.size() > 0) {
+            outputSB.append("\":{%s".formatted("\n"));
+            for (Map.Entry<String, String> entry : super.getAttributes().entrySet()) {
+                outputSB.append("\"@%s\":%s".formatted(entry.getKey(), '"' + entry.getValue() + '"'));
+                counter++;
+                if (children.size() > 0 || counter != super.getAttributes().size() + 1) {
+                    outputSB.append(",%s".formatted("\n"));
+                }
+            }
+            if (children.size() > 0 && super.getAttributes().size() > 0) {
+                outputSB.append("\"#%s\": {".formatted(super.getTagName()));
+            }
+        }
+        if (children.size() == 0) {
+            if (super.getAttributes().size() == 0) {
+                outputSB.append("\":%s".formatted(getContent() == null ? null : '"' + getContent() + '"'));
+            } else {
+                outputSB.append("\"#%s\":%s".formatted(super.getTagName(), getContent() == null ? null : '"' + getContent() + '"'));
+            }
         }
 
-        return outputSB.toString();
+        counter = 0;
+        for (JsonDto child : children) {
+            counter++;
+            outputSB.append(child);
+            if (counter != children.size()) {
+                outputSB.append(",%s".formatted("\n"));
+            }
+        }
+
+
+        if (super.getAttributes().size() > 0) {
+            outputSB.append("%s}".formatted("\n"));
+        }
+        if (children.size() > 0) {
+            outputSB.append("%s}".formatted("\n"));
+        }
     }
 
     public String getHierarchy() {
-        return appendElementString(this, this.getTagName());
+        return getElementString(this, this.getTagName());
     }
 
-    private String appendElementString(JsonDto json, String path) {
-        List<JsonDto> children = json.getChildren();
-        StringBuilder sb = new StringBuilder();
+    private String getElementString(JsonDto json, String path) {
+        return appendElementString(new StringBuilder(), json, path).toString();
+    }
+
+    private StringBuilder appendElementString(StringBuilder sb, JsonDto json, String path) {
+        appendElementPath(sb, path);
+        appendElementContent(json, sb);
+        appendElementAttributes(json, sb);
+        appendElementChildren(json.getChildren(), path, sb);
+        return sb;
+    }
+
+    private void appendElementPath(StringBuilder sb, String path) {
         sb.append("Element:\n");
         sb.append("path = %s\n".formatted(path));
+    }
+
+    private void appendElementContent(JsonDto json, StringBuilder sb) {
         if (json.getContent() != null) {
             sb.append("value = %s\n".formatted(
                             json.getContent().equals("null") ?
@@ -417,7 +429,9 @@ public class JsonDto extends HierarchyElement {
                     )
             );
         }
+    }
 
+    private void appendElementAttributes(JsonDto json, StringBuilder sb) {
         if (json.getAttributes().size() > 0) {
             sb.append("attributes:\n");
             for (Map.Entry<String, String> attributeEntry : json.getAttributes().entrySet()) {
@@ -428,11 +442,13 @@ public class JsonDto extends HierarchyElement {
                 );
             }
         }
+    }
+
+    private void appendElementChildren(List<JsonDto> children, String path, StringBuilder sb) {
         for (JsonDto child : children) {
             if (child.getTagName().length() != 0) {
-                sb.append(appendElementString(child, path + ", " + child.getTagName())).append("\n");
+                sb.append(getElementString(child, path + ", " + child.getTagName())).append("\n");
             }
         }
-        return sb.toString();
     }
 }

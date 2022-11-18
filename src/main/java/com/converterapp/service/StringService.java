@@ -1,21 +1,22 @@
-package com.converterapp.util;
+package com.converterapp.service;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StringUtil {
-    public static String getStringBetweenBraces(String fileContent, int indexOfOpeningBrace, char openingBrace, char closingBrace) {
+public class StringService {
+    public static String getStringBetweenBraces(String text, int indexOfOpeningBrace, char openingBrace, char closingBrace) {
         int counter = 1;
         int currentIndex = indexOfOpeningBrace;
+        char currentChar;
         while (counter != 0) {
-            currentIndex++;
-            if (fileContent.charAt(currentIndex) == closingBrace) {
+            currentChar = text.charAt(++currentIndex);
+            if (currentChar == closingBrace) {
                 counter--;
-            } else if (fileContent.charAt(currentIndex) == openingBrace) {
+            } else if (currentChar == openingBrace) {
                 counter++;
             }
         }
-        return fileContent.substring(indexOfOpeningBrace + 1, currentIndex);
+        return text.substring(indexOfOpeningBrace + 1, currentIndex);
     }
 
     public static String getXmlElement(String fileContent) {

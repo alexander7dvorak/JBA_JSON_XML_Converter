@@ -82,7 +82,6 @@ public class ConverterTest extends StageTest<Clue> {
         );
 
 
-
         allTests.put(
                 "{\n" +
                         "    \"transaction\": {\n" +
@@ -196,7 +195,6 @@ public class ConverterTest extends StageTest<Clue> {
         );
 
 
-
         allTests.put(
                 "<root>\n" +
                         "    <id>6753322</id>\n" +
@@ -259,7 +257,6 @@ public class ConverterTest extends StageTest<Clue> {
         );
 
 
-
         allTests.put(
                 "{\n" +
                         "    \"elem1\": {\n" +
@@ -286,7 +283,6 @@ public class ConverterTest extends StageTest<Clue> {
                         "    <elem3 attr5=\"val5\" attr6=\"val6\">Value2</elem3>\n" +
                         "</elem1>"
         );
-
 
 
         allTests.put(
@@ -413,10 +409,6 @@ public class ConverterTest extends StageTest<Clue> {
         );
 
 
-
-
-
-
         allTests.put(
                 "{\n" +
                         "    \"transaction\": {\n" +
@@ -524,7 +516,6 @@ public class ConverterTest extends StageTest<Clue> {
         );
 
 
-
         allTests.put(
                 "<root>\n" +
                         "    <id>6753333</id>\n" +
@@ -591,7 +582,7 @@ public class ConverterTest extends StageTest<Clue> {
             String answer = allTests.get(input);
 
             TestCase<Clue> test = new TestCase<>();
-            test.addArguments("stage5test");
+            test.addArguments("stage_5_test");
             test.addFile("test.txt", input);
             test.setAttach(new Clue(answer, input));
 

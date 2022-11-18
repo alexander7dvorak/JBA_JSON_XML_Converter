@@ -36,7 +36,7 @@ public class ConverterTest extends StageTest {
         final var expectedElements = parseOutput(expectedOutput);
 
         final var program = new TestedProgram();
-        final var actualOutput = program.start("stage3test");
+        final var actualOutput = program.start("stage_3_test");
 
         assertFalse(actualOutput.isBlank(), "empty");
         final var actualElements = parseOutput(actualOutput);

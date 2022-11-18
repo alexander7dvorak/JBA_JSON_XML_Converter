@@ -5,9 +5,7 @@ import org.hyperskill.hstest.stage.StageTest;
 import org.hyperskill.hstest.testcase.CheckResult;
 import org.hyperskill.hstest.testing.TestedProgram;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -36,7 +34,7 @@ public class ConverterTest extends StageTest {
         final var expectedElements = parseOutput(expectedOutput);
 
         final var program = new TestedProgram();
-        final var actualOutput = program.start("stage4test");
+        final var actualOutput = program.start("stage_4_test");
 
         assertFalse(actualOutput.isBlank(), "empty");
         final var actualElements = parseOutput(actualOutput);
